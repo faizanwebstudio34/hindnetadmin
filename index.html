@@ -1,0 +1,38 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Hindnet Control Room</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@800&family=Instrument+Sans:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0c1018;--card:#141a26;--ink:#eef1f8;--mut:#8f98ad;--ac:#5b6bff;--ln:#ffffff17}
+*{box-sizing:border-box;margin:0}body{background:var(--bg);color:var(--ink);font:15px/1.5 "Instrument Sans",sans-serif;padding:20px;max-width:1100px;margin:auto}
+h1{font-family:"Bricolage Grotesque",sans-serif;font-size:26px;letter-spacing:-.02em}
+header{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:24px}header h1{flex:1;min-width:200px}
+button,input{font:inherit;color:inherit}button{padding:10px 18px;border-radius:99px;border:1px solid var(--ln);background:none;cursor:pointer;transition:.25s}button:hover{border-color:var(--ac)}button.on,button.p{background:var(--ac);border-color:var(--ac);color:#fff}
+form{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;background:var(--card);padding:20px;border-radius:16px;border:1px solid var(--ln);margin-bottom:24px}
+input{padding:12px;border-radius:10px;border:1px solid var(--ln);background:var(--bg);width:100%}
+.g{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}.c{background:var(--card);border:1px solid var(--ln);border-radius:14px;overflow:hidden}.c img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block}.c div{padding:12px}.c p{color:var(--mut);font-size:13px;margin:4px 0 10px}
+</style></head><body><div id="a"></div>
+<script type="module">
+import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import{getAuth,onAuthStateChanged,signInWithEmailAndPassword,signOut}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import{getFirestore,collection,getDocs,addDoc,deleteDoc,doc,query,orderBy}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+// ====== Set your admin email below ======
+const FB={apiKey:"AIzaSyAcKFw1IKx9BAcQUfX4Vg75Pr8vzCfTH1s",authDomain:"hindnetweb.firebaseapp.com",projectId:"hindnetweb",storageBucket:"hindnetweb.firebasestorage.app",messagingSenderId:"1038020453028",appId:"1:1038020453028:web:5234108e453a1f015cfc31"};
+const ADMIN="hindnet@web.com"; // firestore.rules me bhi yahi email
+// ==============================================================
+const fb=initializeApp(FB),auth=getAuth(fb),db=getFirestore(fb),$=s=>document.querySelector(s);
+const e=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const T={laptops:"Laptops",accessories:"Accessories",gallery:"Gallery",bookings:"Travel Requests",messages:"Messages"};
+const P=[["name","Model name"],["brand","Brand"],["specs","Specs: i5 | 16GB | 512GB SSD"],["price","Price (₹)"]];
+const F={laptops:P,accessories:P,gallery:[["caption","Photo caption"]],bookings:[],messages:[]};
+let tab="laptops",U=null;
+const list=async c=>{try{return(await getDocs(query(collection(db,c),orderBy("at","desc")))).docs.map(d=>({id:d.id,...d.data()}))}catch(_){return[]}};
+const rs=f=>new Promise(r=>{const i=new Image;i.onload=()=>{const k=Math.min(1,900/Math.max(i.width,i.height)),c=document.createElement("canvas");c.width=i.width*k;c.height=i.height*k;c.getContext("2d").drawImage(i,0,0,c.width,c.height);r(c.toDataURL("image/jpeg",.8))};i.src=URL.createObjectURL(f)});
+async function show(){const A=$("#a");
+if(!U){A.innerHTML=`<form onsubmit="lg(event)" style="max-width:380px;margin:12vh auto;grid-template-columns:1fr"><h1>Hindnet Control Room</h1><input name="e" type="email" placeholder="Admin email" required><input name="p" type="password" placeholder="Password" required><button class="p">Sign in</button></form>`;return}
+const L=await list(tab);
+A.innerHTML=`<header><h1>Hindnet Control Room</h1>${Object.keys(T).map(k=>`<button class="${k==tab?"on":""}" onclick="go('${k}')">${T[k]}</button>`).join("")}<button onclick="out()">Logout</button></header>`+(F[tab].length?`<form onsubmit="add(event)">${F[tab].map(([k,l])=>`<input name="${k}" placeholder="${l}" required>`).join("")}<input name="img" type="file" accept="image/*"><input name="url" placeholder="Or image URL"><button class="p">${T[tab]} - add item</button></form>`:"")+`<div class="g">${L.map(x=>`<div class="c">${x.img?`<img src="${e(x.img)}" alt="">`:""}<div><b>${e(x.name||x.caption||x.type+": "+x.from+" to "+x.to)}</b><p>${e([x.brand,x.specs,x.price?"₹"+x.price:"",x.date,x.pax?x.pax+" passengers":"",x.email,x.message].filter(Boolean).join(" | "))}</p><button onclick="del('${x.id}')">Delete</button></div></div>`).join("")||"<p>Nothing here yet.</p>"}</div>`}
+Object.assign(window,{go:k=>{tab=k;show()},out:()=>signOut(auth),
+lg:async ev=>{ev.preventDefault();const f=ev.target.elements;try{await signInWithEmailAndPassword(auth,f.e.value,f.p.value)}catch(x){alert("Sign-in failed. Check your email and password.")}},
+add:async ev=>{ev.preventDefault();const f=ev.target.elements,d={at:Date.now()};F[tab].forEach(([k])=>d[k]=f[k].value);d.img=f.img.files[0]?await rs(f.img.files[0]):f.url.value;if(!d.img)return alert("Choose an image or paste a URL.");ev.target.querySelector("button").disabled=true;await addDoc(collection(db,tab),d);show()},
+del:async id=>{if(confirm("Delete permanently?")){await deleteDoc(doc(db,tab,id));show()}}});
+onAuthStateChanged(auth,u=>{U=u&&u.email===ADMIN?u:null;if(u&&!U){signOut(auth);alert("This is not the admin account.")}show()});
+</script></body></html>
