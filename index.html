@@ -1,5 +1,5 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Hindnet Control Room</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" href="favicon.png"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#050507;--card:#111114;--ink:#f5f5f7;--mut:#86868b;--ac:#2997ff;--ln:#ffffff1a}@media(prefers-color-scheme:light){:root{--bg:#f5f5f7;--card:#fff;--ink:#1d1d1f;--mut:#6e6e73;--ac:#0071e3;--ln:#0000001a}}
 *{box-sizing:border-box;margin:0}body{background:var(--bg);color:var(--ink);font:15px/1.5 Inter,system-ui,sans-serif;padding:clamp(14px,3vw,32px);max-width:1280px;margin:auto}
@@ -11,11 +11,12 @@ input,textarea,select{width:100%;padding:12px 14px;border-radius:12px;border:1px
 .g{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,230px),1fr));gap:14px}.c{background:var(--card);border:1px solid var(--ln);border-radius:16px;overflow:hidden}.c img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block}.c>div{padding:14px}.c p{color:var(--mut);font-size:13px;margin:4px 0 10px}.c .bt{display:flex;gap:8px}
 .kp{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px}.kp div{background:var(--card);border:1px solid var(--ln);border-radius:16px;padding:18px}.kp b{font-size:34px;display:block}.kp span{color:var(--mut)}
 .pv{display:flex;gap:10px;flex-wrap:wrap}.pv img{width:90px;height:90px;object-fit:cover;border-radius:12px;border:1px solid var(--ln);cursor:pointer}.sc{border:1px dashed var(--ac);border-radius:16px;padding:16px;margin-bottom:16px}.m{color:var(--mut);font-size:13px}
+.lg:before{content:"";width:48px;height:36px;border-radius:0;background:url(logo-sm.webp) center/contain no-repeat}.lg{gap:8px}
 </style></head><body><div id="a"></div>
 <script type="module">
 import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import{getAuth,onAuthStateChanged,signInWithEmailAndPassword,signOut}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import{getFirestore,collection,getDocs,addDoc,updateDoc,deleteDoc,doc,query,orderBy}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import{getFirestore,collection,getDocs,addDoc,updateDoc,deleteDoc,setDoc,getDoc,deleteField,doc,query,orderBy}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 const FB={apiKey:"AIzaSyAcKFw1IKx9BAcQUfX4Vg75Pr8vzCfTH1s",authDomain:"hindnetweb.firebaseapp.com",projectId:"hindnetweb",storageBucket:"hindnetweb.firebasestorage.app",messagingSenderId:"1038020453028",appId:"1:1038020453028:web:5234108e453a1f015cfc31"},ADMIN="hindnet@web.com";
 const fb=initializeApp(FB),auth=getAuth(fb),db=getFirestore(fb),$=s=>document.querySelector(s);
 const e=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -24,7 +25,7 @@ const FD={laptops:PF,accessories:PF,gallery:[["caption","Caption"]],offers:[["ti
 const T={overview:"Overview",laptops:"Laptops",accessories:"Accessories",gallery:"Gallery",offers:"Offers",reviews:"Reviews",messages:"Messages",bookings:"Travel Requests"};
 let tab="overview",U=null,eid=null,keep=[],L=[];
 const list=async c=>{try{return(await getDocs(query(collection(db,c),orderBy("at","desc")))).docs.map(d=>({id:d.id,...d.data()}))}catch(_){return[]}};
-const rs=f=>new Promise(r=>{const i=new Image;i.onload=()=>{const k=Math.min(1,1000/Math.max(i.width,i.height)),c=document.createElement("canvas");c.width=i.width*k;c.height=i.height*k;c.getContext("2d").drawImage(i,0,0,c.width,c.height);r(c.toDataURL("image/jpeg",.76))};i.src=URL.createObjectURL(f)});
+const rs=(f,mx=900)=>new Promise(r=>{const i=new Image;i.onload=()=>{const k=Math.min(1,mx/Math.max(i.width,i.height)),c=document.createElement("canvas");c.width=i.width*k;c.height=i.height*k;c.getContext("2d").drawImage(i,0,0,c.width,c.height);r(c.toDataURL("image/jpeg",.72))};i.src=typeof f=="string"?f:URL.createObjectURL(f)});
 async function ocr(f){if(!window.Tesseract)await new Promise((ok,no)=>{const s=document.createElement("script");s.src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.0/dist/tesseract.min.js";s.onload=ok;s.onerror=no;document.head.append(s)});return(await Tesseract.recognize(f,"eng")).data.text}
 function parse(t){const g=r=>(t.match(r)||[])[1],br=["Apple","Dell","HP","Lenovo","Asus","Acer","MSI","Samsung","Logitech","Sony","Anker","Razer","Microsoft"].find(b=>new RegExp("\\b"+b+"\\b","i").test(t));
 const cpu=g(/(Core\s*(?:Ultra\s*)?[i]?[3579][-\s]?\w{0,6}|Ryzen\s*[3579]\s*\w{0,6}|Apple\s*M[1-4](?:\s*(?:Pro|Max))?|Snapdragon\s*X\s*\w+)/i),ram=g(/(\d{1,2})\s*GB\s*(?:DDR|LPDDR|RAM|Unified)/i)||g(/RAM[:\s]*(\d{1,2})\s*GB/i),st=t.match(/(\d{3,4}\s*GB|\d\s*TB)\s*(SSD|HDD|NVMe)/i),dp=g(/(\d{2}(?:\.\d)?)\s*(?:inch|"|”)/i),pr=g(/(?:₹|Rs\.?|INR)\s*([\d,]{4,9})/i),gpu=g(/(RTX\s*\d{4}|GTX\s*\d{4}|Radeon\s*\w+\s*\d*)/i),nm=t.split("\n").map(x=>x.trim()).find(x=>x.length>5&&(!br||new RegExp(br,"i").test(x)));
@@ -32,7 +33,7 @@ const rows=[["Processor",cpu],["Memory",ram&&ram+" GB"],["Storage",st&&st[1]+" "
 return{name:nm||"",brand:br||"",price:pr?pr.replace(/,/g,""):"",specs:[cpu,ram&&ram+"GB RAM",st&&st[1]+" "+st[2],dp&&dp+"\" display"].filter(Boolean).join(" | "),table:rows.map(r=>r.join(": ")).join("\n")}}
 const fill=d=>{const f=$("#pf").elements;for(const k in d)if(d[k]&&f[k])f[k].value=d[k]};
 async function show(){const A=$("#a");
-if(!U){A.innerHTML=`<form class="box" onsubmit="lg(event)" style="max-width:400px;margin:12vh auto"><h2 style="margin-top:0">Hindnet Control Room</h2><div class="fg" style="grid-template-columns:1fr"><input name="e" type="email" placeholder="Admin email" required><input name="p" type="password" placeholder="Password" required><button class="p">Sign in</button></div></form>`;return}
+if(!U){A.innerHTML=`<form class="box" onsubmit="lg(event)" style="max-width:400px;margin:12vh auto"><img src="logo.webp" alt="" style="display:block;width:130px;margin:0 auto 14px"><h2 style="margin-top:0;text-align:center">Hindnet Control Room</h2><div class="fg" style="grid-template-columns:1fr"><input name="e" type="email" placeholder="Admin email" required><input name="p" type="password" placeholder="Password" required><button class="p">Sign in</button></div></form>`;return}
 const hd=`<header><div class="lg">Control Room</div><button onclick="out()">Sign out</button></header><div class="tabs">${Object.keys(T).map(k=>`<button class="${k==tab?"on":""}" onclick="go('${k}')">${T[k]}</button>`).join("")}</div>`;
 if(tab=="overview"){const n=await Promise.all(Object.keys(FD).map(async k=>[k,(await list(k)).length]));A.innerHTML=hd+`<div class="kp">${n.map(([k,v])=>`<div><b>${v}</b><span>${T[k]}</span></div>`).join("")}</div>`;return}
 L=await list(tab);const fd=FD[tab],pr=fd===PF,img=pr||tab=="gallery";
@@ -40,10 +41,10 @@ A.innerHTML=hd+(fd.length?`<form class="box" id="pf" onsubmit="sv(event)"><h3 st
 Object.assign(window,{go:k=>{tab=k;eid=null;keep=[];show()},out:()=>signOut(auth),rm:i=>{keep.splice(i,1);$("#pv").innerHTML=keep.map((s,j)=>`<img src="${e(s)}" onclick="rm(${j})" alt="">`).join("")},cx:()=>{eid=null;keep=[];show()},
 lg:async ev=>{ev.preventDefault();const f=ev.target.elements;try{await signInWithEmailAndPassword(auth,f.e.value,f.p.value)}catch(x){alert("Sign-in failed. Check your email and password.")}},
 scan:async()=>{const s=$("#ss"),f=$("#sf").files[0];try{let t=$("#st").value;if(f){s.textContent="Reading image...";t=await ocr(f);$("#st").value=t}fill(parse(t));s.textContent="Done. Please review the fields."}catch{s.textContent="Scan failed. Paste the text instead."}},
-ed:id=>{const x=L.find(y=>y.id==id);eid=id;keep=[...(x.images||(x.img?[x.img]:[]))];show().then(()=>{const f=$("#pf").elements;FD[tab].forEach(([k])=>f[k].value=x[k]??"");scrollTo(0,0)})},
-sv:async ev=>{ev.preventDefault();const f=ev.target.elements,d={},pr=FD[tab]===PF;FD[tab].forEach(([k])=>d[k]=f[k].value);["price","mrp","stock"].forEach(k=>{if(k in d&&d[k]!=="")d[k]=+d[k]});
-if(pr||tab=="gallery"){let im=[...keep];for(const fl of[...f.files.files])if(im.length<(pr?3:1))im.push(await rs(fl));if(!im.length)return alert("Add at least one photo.");d.images=im;d.img=im[0]}
-ev.target.querySelector("button.p").disabled=true;try{eid?await updateDoc(doc(db,tab,eid),d):await addDoc(collection(db,tab),{...d,at:Date.now()})}catch(x){alert("Save failed: "+x.code)}eid=null;keep=[];show()},
-del:async id=>{if(confirm("Delete permanently?")){await deleteDoc(doc(db,tab,id));show()}}});
+ed:async id=>{const x=L.find(y=>y.id==id);eid=id;keep=[...(x.images||(x.img?[x.img]:[]))];if(FD[tab]===PF){try{const s=await getDoc(doc(db,"media",id));if(s.exists())keep=s.data().images}catch{}}show().then(()=>{const f=$("#pf").elements;FD[tab].forEach(([k])=>f[k].value=x[k]??"");scrollTo(0,0)})},
+sv:async ev=>{ev.preventDefault();const f=ev.target.elements,d={},pr=FD[tab]===PF;let media=null;FD[tab].forEach(([k])=>d[k]=f[k].value);["price","mrp","stock"].forEach(k=>{if(k in d&&d[k]!=="")d[k]=+d[k]});
+if(pr||tab=="gallery"){let im=[...keep];for(const fl of[...f.files.files])if(im.length<(pr?3:1))im.push(await rs(fl));if(!im.length)return alert("Add at least one photo.");if(pr){d.thumb=await rs(im[0],420);d.img=d.thumb;d.n=im.length;d.images=deleteField();media=im}else d.img=im[0]}
+ev.target.querySelector("button.p").disabled=true;try{let id=eid;if(eid)await updateDoc(doc(db,tab,eid),d);else{delete d.images;id=(await addDoc(collection(db,tab),{...d,at:Date.now()})).id}if(media)await setDoc(doc(db,"media",id),{images:media})}catch(x){alert("Save failed: "+x.code)}eid=null;keep=[];show()},
+del:async id=>{if(confirm("Delete permanently?")){await deleteDoc(doc(db,tab,id));if(FD[tab]===PF)try{await deleteDoc(doc(db,"media",id))}catch{}show()}}});
 onAuthStateChanged(auth,u=>{U=u&&u.email===ADMIN?u:null;if(u&&!U){signOut(auth);alert("This is not the admin account.")}show()});
 </script></body></html>
